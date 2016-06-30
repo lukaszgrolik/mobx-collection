@@ -36,8 +36,12 @@ module.exports = class Collection {
     return _.find(this.records, predicate);
   }
 
-  replace(recordArg) {
+  clear() {
     this.records.length = 0;
+  }
+
+  replace(recordArg) {
+    this.clear();
 
     return this.inject(recordArg);
   }
