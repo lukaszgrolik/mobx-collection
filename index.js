@@ -1,12 +1,37 @@
-const _ = require('lodash');
-const mergeItems = require('merge-items');
+import _find from 'lodash/find';
+import _filter from 'lodash/filter';
+import _some from 'lodash/some';
+import _each from 'lodash/each';
+import _remove from 'lodash/remove';
+import _includes from 'lodash/includes';
+import customError from 'custom-error';
+import mergeItems from 'merge-items';
 
-module.exports = class Collection {
-  constructor(recordArg, opts) {
-    if (opts === undefined) opts = {};
+const _ = {
+  find: _find,
+  filter: _filter,
+  some: _some,
+  each: _each,
+  remove: _remove,
+  includes: _includes,
+};
 
-    if (typeof opts.recordsMapper === 'function') {
-      this.records = opts.recordsMapper([]);
+const isInvalidIdArgument = arg => {
+  if (arg instanceof Array) {
+    return _.some(arg, isInvalidIdArgument);
+  } else {
+    return _.includes(['number', 'string'], typeof arg) === false;
+  }
+};
+
+export default class Collection {
+  static InvalidIdArgumentError = customError('InvalidIdArgumentError');
+
+  primaryKey = 'id';
+
+  constructor(recordArg) {
+    if (typeof this.transformRecords === 'function') {
+      this.records = this.transformRecords([]);
     } else {
       this.records = [];
     }
@@ -15,17 +40,45 @@ module.exports = class Collection {
   }
 
   inject(recordArg) {
-    return mergeItems(this.records, recordArg, {
-      mapper: item => new this.constructor.recordMapper(item),
-    });
+    const opts = {
+      primaryKey: this.primaryKey,
+      ...((typeof this.recordMapper === 'function') && {
+        mapper: item => new this.recordMapper(item),
+      }),
+    };
+
+    return mergeItems(this.records, recordArg, opts);
   }
 
   eject(idArg) {
-    const ids = idArg instanceof Array ? idArg : [idArg];
+    if (isInvalidIdArgument(idArg)) {
+      throw new this.constructor.InvalidIdArgumentError('Either number, string or array of numbers or strings required');
+    }
 
-    return _.remove(this.records, record => {
-      return _.includes(ids, record.id);
+    const ids = idArg instanceof Array ? idArg : [idArg];
+    const result = _.remove(this.records, record => {
+      return _.includes(ids, record[this.primaryKey]);
     });
+
+    if (idArg instanceof Array) {
+      return result;
+    } else {
+      return result[0];
+    }
+  }
+
+  get(idArg) {
+    if (isInvalidIdArgument(idArg)) {
+      throw new this.constructor.InvalidIdArgumentError('Either number, string or array of numbers or strings required');
+    }
+
+    if (idArg instanceof Array) {
+      return _.filter(this.records, record => {
+        return _.includes(idArg, record[this.primaryKey]);
+      });
+    } else {
+      return _.find(this.records, {[this.primaryKey]: idArg});
+    }
   }
 
   filter(predicate) {
@@ -37,12 +90,18 @@ module.exports = class Collection {
   }
 
   clear() {
+    const n = this.records.length;
+
     this.records.length = 0;
+
+    return n;
   }
 
   replace(recordArg) {
-    this.clear();
+    const result = this.clear();
 
-    return this.inject(recordArg);
+    this.inject(recordArg);
+
+    return result;
   }
 };

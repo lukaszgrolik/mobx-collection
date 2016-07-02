@@ -1,13 +1,15 @@
 ```js
 import Collection from 'collection';
 
-class Task {
+class Person {
   constructor(body) {
     Object.assign(this, body);
   }
 }
 
-class TaskCollection extends Collection {
-  static recordMapper = record => new Task(record);
+class PersonCollection extends Collection {
+  primaryKey = '_id';
+  transformRecords = records => new SomeSpecialArray(record);
+  recordMapper = record => new Person(record);
 }
 ```

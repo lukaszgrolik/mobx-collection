@@ -1,0 +1,24 @@
+{
+  "name": "collection",
+  "version": "0.0.0",
+  "main": "dist/collection.min.js",
+  "scripts": {
+    "build": "WEBPACK_ENV=build webpack",
+    "dev": "WEBPACK_ENV=dev webpack --progress --colors --watch",
+    "test": "mocha",
+    "test:build": "NODE_ENV=production npm run test"
+  },
+  "dependencies": {
+    "custom-error": "^0.2.1"
+  },
+  "devDependencies": {
+    "babel-core": "^6.10.4",
+    "babel-loader": "^6.2.4",
+    "babel-plugin-add-module-exports": "^0.2.1",
+    "babel-preset-es2015": "^6.9.0",
+    "babel-preset-stage-0": "^6.5.0",
+    "mocha": "^2.5.3",
+    "should": "^9.0.2",
+    "webpack": "^1.13.1"
+  }
+}
