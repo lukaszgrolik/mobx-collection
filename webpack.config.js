@@ -37,6 +37,7 @@ module.exports = {
           ],
           plugins: [
             'add-module-exports',
+            require.resolve('babel-plugin-transform-decorators-legacy'),
           ],
         },
       },

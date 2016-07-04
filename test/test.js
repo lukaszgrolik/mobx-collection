@@ -13,6 +13,88 @@ describe('constructor', () => {
   });
 });
 
+describe('recordMapper', () => {
+  it('maps records', () => {
+    class Foo {
+      constructor(body) {
+        this.id = body.id * 3;
+      }
+    }
+
+    class FooCollection extends Collection {
+      constructor(records) {
+        super();
+
+        this.recordMapper = foo => new Foo(foo);
+        this.inject(records);
+      }
+    }
+
+    const coll = new FooCollection([{id: 1}, {id: 2}, {id: 3}]);
+
+    coll.records.slice()[0].should.be.instanceOf(Foo);
+    coll.records.slice()[0].should.have.property('id', 3);
+    coll.records.slice()[1].should.be.instanceOf(Foo);
+    coll.records.slice()[1].should.have.property('id', 6);
+    coll.records.slice()[2].should.be.instanceOf(Foo);
+    coll.records.slice()[2].should.have.property('id', 9);
+  });
+});
+
+describe('get', () => {
+  describe('with ID', () => {
+    it('throws if given ID is invalid', () => {
+      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
+      const args = [undefined, null, {}];
+
+      args.forEach(arg => {
+        (() => coll.get(arg)).should.throw(Collection.InvalidIdArgumentError);
+      });
+    });
+
+    it('returns single record', () => {
+      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
+
+      coll.get(2).should.containDeepOrdered({id: 2});
+    });
+  });
+
+  describe('with array of IDs', () => {
+    it('throws if any of given IDs is invalid', () => {
+      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
+      const args = [undefined, null, {}];
+
+      args.forEach(arg => {
+        (() => coll.get([arg])).should.throw(Collection.InvalidIdArgumentError);
+      });
+    });
+
+    it('returns many records', () => {
+      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
+
+      coll.get([2, 1]).should.containDeepOrdered([{id: 1}, {id: 2}]);
+    });
+  });
+});
+
+describe('filter', () => {
+  it('returns array of records', () => {
+    const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
+
+    coll.filter(r => [2, 1].includes(r.id)).should.containDeepOrdered([{id: 1}, {id: 2}]);
+  });
+});
+
+describe('find', () => {
+  it('returns record', () => {
+    it('returns array of records', () => {
+      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
+
+      coll.find({id: 2}).should.containDeepOrdered({id: 2});
+    });
+  });
+});
+
 // uses external library
 describe('inject', () => {
   // it('injects single record', () => {
@@ -88,60 +170,6 @@ describe('eject', () => {
       const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
 
       coll.eject([2, 3]).should.containDeepOrdered([{id: 2}, {id: 3}]);
-    });
-  });
-});
-
-describe('get', () => {
-  describe('with ID', () => {
-    it('throws if given ID is invalid', () => {
-      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-      const args = [undefined, null, {}];
-
-      args.forEach(arg => {
-        (() => coll.get(arg)).should.throw(Collection.InvalidIdArgumentError);
-      });
-    });
-
-    it('returns single record', () => {
-      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-
-      coll.get(2).should.containDeepOrdered({id: 2});
-    });
-  });
-
-  describe('with array of IDs', () => {
-    it('throws if any of given IDs is invalid', () => {
-      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-      const args = [undefined, null, {}];
-
-      args.forEach(arg => {
-        (() => coll.get([arg])).should.throw(Collection.InvalidIdArgumentError);
-      });
-    });
-
-    it('returns many records', () => {
-      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-
-      coll.get([2, 1]).should.containDeepOrdered([{id: 1}, {id: 2}]);
-    });
-  });
-});
-
-describe('filter', () => {
-  it('returns array of records', () => {
-    const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-
-    coll.filter(r => [2, 1].includes(r.id)).should.containDeepOrdered([{id: 1}, {id: 2}]);
-  });
-});
-
-describe('find', () => {
-  it('returns record', () => {
-    it('returns array of records', () => {
-      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-
-      coll.find({id: 2}).should.containDeepOrdered({id: 2});
     });
   });
 });

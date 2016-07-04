@@ -9,7 +9,6 @@ class Person {
 
 class PersonCollection extends Collection {
   primaryKey = '_id';
-  transformRecords = records => new SomeSpecialArray(record);
   recordMapper = record => new Person(record);
 }
 ```
