@@ -1,15 +1,35 @@
 {
-  "name": "collection",
+  "name": "mobx-collection",
   "version": "0.0.0",
-  "main": "dist/collection.min.js",
+  "main": "dist/mobx-collection.min.js",
+  "description": "Objects store for MobX",
+  "keywords": [
+    "mobx",
+    "collection",
+    "objects",
+    "store",
+    "records",
+    "documents"
+  ],
+  "repository": "https://github.com/lukaszgrolik/mobx-collection",
+  "homepage": "https://github.com/lukaszgrolik/mobx-collection",
+  "bugs": "https://github.com/lukaszgrolik/mobx-collection/issues",
+  "author": {
+    "name": "Łukasz Grolik",
+    "email": "lukasz@grolik.pl",
+    "url": "https://github.com/lukaszgrolik"
+  },
   "scripts": {
+    "dev": "WEBPACK_ENV=dev webpack --progress --colors",
+    "dev:watch": "WEBPACK_ENV=dev webpack --progress --colors --watch",
     "build": "WEBPACK_ENV=build webpack",
-    "dev": "WEBPACK_ENV=dev webpack --progress --colors --watch",
     "test": "mocha",
-    "test:build": "NODE_ENV=production npm run test"
+    "test:build": "NODE_ENV=production npm run test",
+    "preversion": "npm run dev && npm run build && npm run test:build"
   },
   "dependencies": {
-    "custom-error": "^0.2.1"
+    "custom-error": "^0.2.1",
+    "merge-items": "^0.1.0"
   },
   "peerDependencies": {
     "mobx": "2.x"
@@ -25,5 +45,6 @@
     "mocha": "^2.5.3",
     "should": "^9.0.2",
     "webpack": "^1.13.1"
-  }
+  },
+  "license": "MIT"
 }

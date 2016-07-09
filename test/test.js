@@ -1,12 +1,17 @@
 const should = require('should');
+const {isObservableArray} = require('mobx');
 
-let scriptPath = '../dist/collection';
-
-if (process.env.NODE_ENV === 'production') scriptPath += '.min';
-
-const Collection = require(scriptPath);
+const Collection = require('../dist/mobx-collection' + (process.env.NODE_ENV === 'production' ? '.min' : ''));
 
 describe('constructor', () => {
+  it('contains observable records array', () => {
+    isObservableArray(new Collection().records).should.equal(true);
+  });
+
+  it('contains primaryKey property', () => {
+    new Collection().primaryKey.should.equal('id') ;
+  });
+
   it('adds records', () => {
     new Collection([{id: 1}, {id: 2}, {id: 3}]).records
     .should.containDeepOrdered([{id: 1}, {id: 2}, {id: 3}]);
@@ -32,6 +37,7 @@ describe('recordMapper', () => {
 
     const coll = new FooCollection([{id: 1}, {id: 2}, {id: 3}]);
 
+    coll.records.slice().should.be.lengthOf(3);
     coll.records.slice()[0].should.be.instanceOf(Foo);
     coll.records.slice()[0].should.have.property('id', 3);
     coll.records.slice()[1].should.be.instanceOf(Foo);

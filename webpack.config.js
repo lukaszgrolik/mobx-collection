@@ -3,15 +3,11 @@ const webpack = require('webpack');
 
 const pkg = require('./package');
 
-const library = pkg.name;
 const env = process.env.WEBPACK_ENV;
 const plugins = [];
 
 if (env === 'build') {
   plugins.push(new webpack.optimize.UglifyJsPlugin({minimize: true}));
-  filename = library + '.min.js';
-} else {
-  filename = library + '.js';
 }
 
 module.exports = {
@@ -19,10 +15,18 @@ module.exports = {
   devtool: 'source-map',
   output: {
     path: path.join(__dirname, 'dist'),
-    filename,
-    library,
+    filename: `${pkg.name}${env === 'build' ? '.min' : ''}.js`,
+    library: pkg.name,
     libraryTarget: 'umd',
     umdNamedDefine: true
+  },
+  externals: {
+    'mobx': {
+      root: 'mobx',
+      commonjs2: 'mobx',
+      commonjs: 'mobx',
+      amd: 'mobx',
+    },
   },
   module: {
     loaders: [
@@ -32,13 +36,13 @@ module.exports = {
         exclude: /node_modules/,
         query: {
           presets: [
-            'es2015',
-            'stage-0',
-          ],
+            'babel-preset-es2015',
+            'babel-preset-stage-0',
+          ].map(require.resolve),
           plugins: [
-            'add-module-exports',
-            require.resolve('babel-plugin-transform-decorators-legacy'),
-          ],
+            'babel-plugin-add-module-exports',
+            'babel-plugin-transform-decorators-legacy',
+          ].map(require.resolve),
         },
       },
     ],

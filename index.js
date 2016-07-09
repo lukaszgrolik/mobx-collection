@@ -5,7 +5,7 @@ import _each from 'lodash/each';
 import _remove from 'lodash/remove';
 import _includes from 'lodash/includes';
 import customError from 'custom-error';
-import {observable, action, transaction} from 'mobx';
+import {observable, action} from 'mobx';
 import mergeItems from 'merge-items';
 
 const _ = {
@@ -67,9 +67,7 @@ export default class Collection {
       }),
     };
 
-    return transaction(() => {
-      return mergeItems(this.records, recordArg, opts);
-    });
+    return mergeItems(this.records, recordArg, opts);
   }
 
   @action eject(idArg) {
@@ -77,37 +75,31 @@ export default class Collection {
       throw new this.constructor.InvalidIdArgumentError('Either number, string or array of numbers or strings required');
     }
 
-    return transaction(() => {
-      const ids = idArg instanceof Array ? idArg : [idArg];
-      const result = _.remove(this.records, record => {
-        return _.includes(ids, record[this.primaryKey]);
-      });
-
-      if (idArg instanceof Array) {
-        return result;
-      } else {
-        return result[0];
-      }
+    const ids = idArg instanceof Array ? idArg : [idArg];
+    const result = _.remove(this.records, record => {
+      return _.includes(ids, record[this.primaryKey]);
     });
+
+    if (idArg instanceof Array) {
+      return result;
+    } else {
+      return result[0];
+    }
   }
 
   @action clear() {
-    return transaction(() => {
-      const n = this.records.length;
+    const n = this.records.length;
 
-      this.records.length = 0;
+    this.records.length = 0;
 
-      return n;
-    });
+    return n;
   }
 
   @action replace(recordArg) {
-    return transaction(() => {
-      const result = this.clear();
+    const result = this.clear();
 
-      this.inject(recordArg);
+    this.inject(recordArg);
 
-      return result;
-    });
+    return result;
   }
 };
