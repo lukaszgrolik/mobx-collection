@@ -49,15 +49,6 @@ describe('recordMapper', () => {
 
 describe('get', () => {
   describe('with ID', () => {
-    it('throws if given ID is invalid', () => {
-      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-      const args = [undefined, null, {}];
-
-      args.forEach(arg => {
-        (() => coll.get(arg)).should.throw(Collection.InvalidIdArgumentError);
-      });
-    });
-
     it('returns single record', () => {
       const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
 
@@ -66,15 +57,6 @@ describe('get', () => {
   });
 
   describe('with array of IDs', () => {
-    it('throws if any of given IDs is invalid', () => {
-      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-      const args = [undefined, null, {}];
-
-      args.forEach(arg => {
-        (() => coll.get([arg])).should.throw(Collection.InvalidIdArgumentError);
-      });
-    });
-
     it('returns many records', () => {
       const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
 
@@ -130,15 +112,6 @@ describe('inject', () => {
 
 describe('eject', () => {
   describe('with ID', () => {
-    it('throws if given ID is invalid', () => {
-      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-      const args = [undefined, null, {}];
-
-      args.forEach(arg => {
-        (() => coll.eject(arg)).should.throw(Collection.InvalidIdArgumentError);
-      });
-    });
-
     it('removes single record', () => {
       const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
 
@@ -155,15 +128,6 @@ describe('eject', () => {
   });
 
   describe('with array of IDs', () => {
-    it('throws if any of given IDs is invalid', () => {
-      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-      const args = [undefined, null, {}];
-
-      args.forEach(arg => {
-        (() => coll.eject([arg])).should.throw(Collection.InvalidIdArgumentError);
-      });
-    });
-
     it('removes many records', () => {
       const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
 

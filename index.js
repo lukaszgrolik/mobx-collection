@@ -17,17 +17,7 @@ const _ = {
   includes: _includes,
 };
 
-const isInvalidIdArgument = arg => {
-  if (arg instanceof Array) {
-    return _.some(arg, isInvalidIdArgument);
-  } else {
-    return _.includes(['number', 'string'], typeof arg) === false;
-  }
-};
-
 export default class Collection {
-  static InvalidIdArgumentError = customError('InvalidIdArgumentError');
-
   @observable records = [];
   primaryKey = 'id';
 
@@ -38,10 +28,6 @@ export default class Collection {
   }
 
   get(idArg) {
-    if (isInvalidIdArgument(idArg)) {
-      throw new this.constructor.InvalidIdArgumentError('Either number, string or array of numbers or strings required');
-    }
-
     if (idArg instanceof Array) {
       return _.filter(this.records, record => {
         return _.includes(idArg, record[this.primaryKey]);
@@ -71,10 +57,6 @@ export default class Collection {
   }
 
   @action eject(idArg) {
-    if (isInvalidIdArgument(idArg)) {
-      throw new this.constructor.InvalidIdArgumentError('Either number, string or array of numbers or strings required');
-    }
-
     const ids = idArg instanceof Array ? idArg : [idArg];
     const result = _.remove(this.records, record => {
       return _.includes(ids, record[this.primaryKey]);
