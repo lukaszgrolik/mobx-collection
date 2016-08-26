@@ -1,7 +1,7 @@
 {
   "name": "mobx-collection",
   "version": "0.1.0",
-  "main": "dist/mobx-collection.min.js",
+  "main": "dist/mobx-collection.js",
   "description": "Objects store for MobX",
   "keywords": [
     "mobx",
@@ -25,7 +25,7 @@
     "build": "WEBPACK_ENV=build webpack",
     "test": "mocha",
     "test:build": "NODE_ENV=production npm run test",
-    "preversion": "npm run dev && npm run build && npm run test:build"
+    "preversion": "npm run dev && npm run build && npm run test && npm run test:build"
   },
   "dependencies": {
     "custom-error": "^0.2.1",
