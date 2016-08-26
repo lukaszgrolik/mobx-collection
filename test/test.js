@@ -18,7 +18,7 @@ describe('constructor', () => {
   });
 });
 
-describe('recordMapper', () => {
+describe('transformRecords', () => {
   it('maps records', () => {
     class Foo {
       constructor(body) {
@@ -30,7 +30,7 @@ describe('recordMapper', () => {
       constructor(records) {
         super();
 
-        this.recordMapper = foo => new Foo(foo);
+        this.transformRecords = foo => new Foo(foo);
         this.inject(records);
       }
     }

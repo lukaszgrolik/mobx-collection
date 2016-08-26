@@ -46,10 +46,18 @@ export default class Collection {
   }
 
   @action inject(recordArg) {
+    if (this.recordMapper) {
+      const warning = '"recordMapper" option is deprecated, use "transformRecords" option instead';
+
+      (typeof console.warn === 'function') ? console.warn(warning) : console.log(warning);
+
+      this.transformRecords = this.recordMapper;
+    }
+
     const opts = {
       primaryKey: this.primaryKey,
-      ...((typeof this.recordMapper === 'function') && {
-        mapper: this.recordMapper,
+      ...((typeof this.transformRecords === 'function') && {
+        mapper: this.transformRecords,
       }),
     };
 

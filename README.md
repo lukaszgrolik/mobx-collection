@@ -53,7 +53,7 @@ class Person {
 }
 
 class PersonCollection extends Collection {
-  recordMapper = person => new Person(person);
+  transformRecords = person => new Person(person);
 
   @computed alonePeople() {
     return this.filter(person => !person.hasFriends);
@@ -113,7 +113,7 @@ class FooCollection extends Collection {
 }
 ```
 
-#### recordMapper
+#### transformRecords
 
 - type: *function*
 
@@ -126,11 +126,11 @@ class Foo {
 
 class FooCollection extends Collection {
   // es7
-  recordMapper = foo => new Foo(foo);
+  transformRecords = foo => new Foo(foo);
 
   // es6
   constructor() {
-    this.recordMapper = foo => new Foo(foo);
+    this.transformRecords = foo => new Foo(foo);
   }
 }
 ```
