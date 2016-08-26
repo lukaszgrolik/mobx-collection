@@ -108,6 +108,8 @@ class FooCollection extends Collection {
 
   // es6
   constructor() {
+    super();
+
     this.primaryKey = '_id';
   }
 }
@@ -119,8 +121,12 @@ class FooCollection extends Collection {
 
 ```js
 class Foo {
-  constructor(body) {
-    Object.assign(this, body);
+  constructor(params) {
+    const {id, ...body} = params;
+
+    this.id = id;
+
+    extendObservable(this, body);
   }
 }
 
@@ -130,6 +136,8 @@ class FooCollection extends Collection {
 
   // es6
   constructor() {
+    super();
+
     this.transformRecords = foo => new Foo(foo);
   }
 }
@@ -145,13 +153,47 @@ Returns found record(s) by given ID(s).
 
 - Returns *record*|*undefined* if primitive ID given or array of records if array of IDs given.
 
+```js
+const foos = new FooCollection([
+  {id: 1, name: 'John'},
+  {id: 2, name: 'Bob'},
+]);
+
+foos.get(1);
+// => {id: 1, name: 'John'}
+foos.get([1, 2]);
+// => [{id: 1, name: 'John'}, {id: 2, name: 'Bob'}]
+```
+
 #### #filter(...params)
 
 Lodash `filter` function bound to collection's records.
 
+```js
+const foos = new FooCollection([
+  {id: 1, name: 'John'},
+  {id: 2, name: 'Bob'},
+  {id: 3, name: 'Alice'},
+]);
+
+foos.filter(f => f.name.length > 3);
+// => [{id: 1, name: 'John'}, {id: 3, name: 'Alice'}]
+```
+
 #### #find(...params)
 
 Lodash `find` function bound to collection's records.
+
+```js
+const foos = new FooCollection([
+  {id: 1, name: 'John'},
+  {id: 2, name: 'Bob'},
+  {id: 3, name: 'Alice'},
+]);
+
+foos.find({name: 'Alice'});
+// => {id: 3, name: 'Alice'}
+```
 
 #### #inject(recordArg)
 
@@ -161,6 +203,21 @@ Upserts record(s) into collection. Utilizes [merge-items](https://github.com/luk
 
 - Returns object containing arrays of inserted and updated records' IDs.
 
+```js
+const foos = new FooCollection([
+  {id: 1, name: 'John'},
+  {id: 2, name: 'Bob'},
+]);
+
+foos.inject({id: 2, name: 'Alice'});
+// => {inserted: [], updated: [2]}
+foos.inject([{id: 1, name: 'Andrew'}, {id: 3, name: 'Steve'}]);
+// => {inserted: [3], updated: [1]}
+
+foos.filter();
+// => [{id: 1, name: 'Andrew'}, {id: 2, name: 'Alice'}, {id: 3, name: 'Steve'}]
+```
+
 #### #eject(idArg)
 
 - idArg - *string*|*number* or array of *strings*|*numbers*
@@ -169,11 +226,42 @@ Removes record(s) from collection by given ID(s). Returns removed record(s).
 
 - Returns *record*|*undefined* if primitive ID given or array of records if array of IDs given.
 
+```js
+const foos = new FooCollection([
+  {id: 1, name: 'John'},
+  {id: 2, name: 'Bob'},
+  {id: 3, name: 'Alice'},
+  {id: 4, name: 'Steve'},
+]);
+
+foos.eject(1);
+// => {id: 1, name: 'John'}
+foos.eject([2, 3]);
+// => [{id: 2, name: 'Bob'}, {id: 3, name: 'Alice'}]
+
+foos.filter();
+// => [{id: 4, name: 'Steve'}]
+```
+
 #### #clear()
 
 Removes all records from collection.
 
 - Returns number of removed records.
+
+```js
+const foos = new FooCollection([
+  {id: 1, name: 'John'},
+  {id: 2, name: 'Bob'},
+  {id: 3, name: 'Alice'},
+]);
+
+foos.clear();
+// => 3
+
+foos.filter();
+// => []
+```
 
 #### #replace(recordArg)
 
@@ -181,4 +269,21 @@ Removes all records from collection.
 
 Removes current records from collection and adds new record(s).
 
-- Returns the same result as `inject` method.
+- Returns number of removed records.
+
+```js
+const foos = new FooCollection([
+  {id: 1, name: 'John'},
+  {id: 2, name: 'Bob'},
+  {id: 3, name: 'Alice'},
+]);
+
+foos.replace([
+  {id: 1, name: 'Alice'},
+  {id: 2, name: 'Steve'},
+]);
+// => 3
+
+foos.filter();
+// => [{id: 1, name: 'Alice'}, {id: 2, name: 'Steve'}]
+```
