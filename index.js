@@ -1,18 +1,15 @@
 import _find from 'lodash/find';
 import _filter from 'lodash/filter';
-import _some from 'lodash/some';
-import _each from 'lodash/each';
+import _reduce from 'lodash/reduce';
 import _remove from 'lodash/remove';
 import _includes from 'lodash/includes';
-import customError from 'custom-error';
 import {observable, action} from 'mobx';
 import mergeItems from 'merge-items';
 
 const _ = {
   find: _find,
   filter: _filter,
-  some: _some,
-  each: _each,
+  reduce: _reduce,
   remove: _remove,
   includes: _includes,
 };
@@ -23,17 +20,27 @@ export default class Collection {
 
   constructor(recordArg) {
     if (recordArg) {
-      this.inject(recordArg);
+      this.upsert(recordArg);
     }
   }
 
   get(idArg) {
     if (idArg instanceof Array) {
-      return _.filter(this.records, record => {
-        return _.includes(idArg, record[this.primaryKey]);
-      });
+      return _.reduce(idArg, (memo, id) => {
+        const record = _.find(this.records, record => {
+          return record[this.primaryKey] == id;
+        });
+
+        if (record) {
+          memo.push(record);
+        }
+
+        return memo;
+      }, []);
     } else {
-      return _.find(this.records, {[this.primaryKey]: idArg});
+      return _.find(this.records, record => {
+        return record[this.primaryKey] == idArg;
+      });
     }
   }
 
@@ -45,26 +52,30 @@ export default class Collection {
     return _.find(this.records, predicate);
   }
 
-  @action inject(recordArg) {
-    if (this.recordMapper) {
-      const warning = '"recordMapper" option is deprecated, use "transformRecords" option instead';
-
-      (typeof console.warn === 'function') ? console.warn(warning) : console.log(warning);
-
-      this.transformRecords = this.recordMapper;
-    }
-
+  @action upsert(recordArg) {
+    const callbacks = [
+      'mapInsert',
+      'mapUpdate',
+      'mapUpsert',
+      'afterInsert',
+      'afterUpdate',
+      'afterUpsert',
+    ];
     const opts = {
       primaryKey: this.primaryKey,
-      ...((typeof this.transformRecords === 'function') && {
-        mapper: this.transformRecords,
-      }),
+      ..._.reduce(callbacks, (memo, cb) => {
+        if (typeof this[cb] === 'function') {
+          memo[cb] = this[cb]
+        }
+
+        return memo;
+      }, {}),
     };
 
     return mergeItems(this.records, recordArg, opts);
   }
 
-  @action eject(idArg) {
+  @action remove(idArg) {
     const ids = idArg instanceof Array ? idArg : [idArg];
     const result = _.remove(this.records, record => {
       return _.includes(ids, record[this.primaryKey]);
@@ -88,7 +99,7 @@ export default class Collection {
   @action replace(recordArg) {
     const result = this.clear();
 
-    this.inject(recordArg);
+    this.upsert(recordArg);
 
     return result;
   }
