@@ -29,7 +29,7 @@
   },
   "dependencies": {
     "custom-error": "^0.2.1",
-    "merge-items": "^0.1.0"
+    "merge-items": "~0.1.0"
   },
   "peerDependencies": {
     "mobx": "2.x"
