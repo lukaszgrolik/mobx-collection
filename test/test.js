@@ -72,51 +72,6 @@ describe('"find" method', () => {
   });
 });
 
-describe('"upsert" method', () => {
-  it('upserts single record', () => {
-    const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-
-    coll.upsert({id: 4});
-    coll.upsert({id: 2, name: 'foo'});
-
-    coll.records.slice().should.eql([
-      {id: 1},
-      {id: 2, name: 'foo'},
-      {id: 3},
-      {id: 4},
-    ]);
-  });
-
-  it('upserts many records', () => {
-    const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-
-    coll.upsert([
-      {id: 4},
-      {id: 2, name: 'foo'},
-    ]);
-
-    coll.records.slice().should.eql([
-      {id: 1},
-      {id: 2, name: 'foo'},
-      {id: 3},
-      {id: 4},
-    ]);
-  });
-
-  it('returns object with inserted and updated records IDs', () => {
-    const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-    const res = coll.upsert([
-      {id: 4},
-      {id: 2, name: 'foo'},
-    ]);
-
-    res.should.eql([
-      {id: 4},
-      {id: 2, name: 'foo'},
-    ]);
-  });
-});
-
 describe('"remove" method', () => {
   it('removes single record when single ID given', () => {
     const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);

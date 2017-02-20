@@ -3,6 +3,51 @@ const should = require('should');
 const Collection = require('../dist/mobx-collection' + (process.env.NODE_ENV === 'production' ? '.min' : ''));
 
 describe('merge-items integration', () => {
+  describe('"upsert" method', () => {
+    it('upserts single record', () => {
+      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
+
+      coll.upsert({id: 4});
+      coll.upsert({id: 2, name: 'foo'});
+
+      coll.records.slice().should.eql([
+        {id: 1},
+        {id: 2, name: 'foo'},
+        {id: 3},
+        {id: 4},
+      ]);
+    });
+
+    it('upserts many records', () => {
+      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
+
+      coll.upsert([
+        {id: 4},
+        {id: 2, name: 'foo'},
+      ]);
+
+      coll.records.slice().should.eql([
+        {id: 1},
+        {id: 2, name: 'foo'},
+        {id: 3},
+        {id: 4},
+      ]);
+    });
+
+    it('returns upserted records', () => {
+      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
+      const res = coll.upsert([
+        {id: 4},
+        {id: 2, name: 'foo'},
+      ]);
+
+      res.should.eql([
+        {id: 4},
+        {id: 2, name: 'foo'},
+      ]);
+    });
+  });
+
   describe('"mapInsert" option', () => {
     it('maps records', () => {
       class Foo {
