@@ -13,7 +13,7 @@ class FooCollection extends Collection {}
 
 const foos = new FooCollection();
 
-foos.inject([
+foos.upsert([
   {id: 1, name: 'John'},
 ]);
 
@@ -53,7 +53,7 @@ class Person {
 }
 
 class PersonCollection extends Collection {
-  transformRecords = person => new Person(person);
+  mapInsert = person => new Person(person);
 
   @computed alonePeople() {
     return this.filter(person => !person.hasFriends);
@@ -66,7 +66,7 @@ class PersonCollection extends Collection {
 
 const people = new PersonCollection();
 
-people.inject([
+people.upsert([
   {id: 1, name: 'Foo', friendsIds: [3]},
   {id: 2, name: 'Bar'},
   {id: 3, name: 'Baz'},
@@ -79,7 +79,7 @@ if (!person.hasFriends) person.die();
 
 ## API
 
-### constructor(recordArg)
+### `constructor(recordArg)`
 
 - `recordArg` - *object* or array of *objects*
 
@@ -96,32 +96,26 @@ foos.get(1);
 
 ### properties
 
-#### primaryKey
+#### `primaryKey`
 
 - type: *string*|*number*
 - default: `id`
 
 ```js
 class FooCollection extends Collection {
-  // es7
   primaryKey = '_id';
-
-  // es6
-  constructor() {
-    super();
-
-    this.primaryKey = '_id';
-  }
 }
 ```
 
-#### transformRecords
+#### `mapInsert`, `mapUpdate`, `mapUpsert` callbacks
 
-- type: *function*
+- `mapInsert(data)` - maps records to be inserted (new records)
+- `mapUpdate(data)` - maps records to be updated (existing records)
+- `mapUpsert(data, isNew)` - maps all records
 
 ```js
-class Foo {
-  constructor(params) {
+class Person {
+  constructor(body) {
     const {id, ...body} = params;
 
     this.id = id;
@@ -130,22 +124,111 @@ class Foo {
   }
 }
 
-class FooCollection extends Collection {
-  // es7
-  transformRecords = foo => new Foo(foo);
+class PersonCollection extends Collection {
+  mapUpsert = (data, isNew) => {
+    if (isNew) {
+      return new Person(data);
+    } else {
+      return data;
+    }
+  };
+}
 
-  // es6
-  constructor() {
-    super();
+const people = new PersonCollection();
 
-    this.transformRecords = foo => new Foo(foo);
+people.upsert({
+  id: 1,
+  name: 'Bob',
+  age: 20,
+});
+// => Person {
+//   id: 1,
+//   name: 'Bob',
+//   age: 20,
+// }
+```
+
+#### `afterInsert`, `afterUpdate`, `afterUpsert` callbacks
+
+- `afterInsert(record, data)` - invokes after record was inserted (new record)
+- `afterUpdate(record, data)` - invokes after record was updated (existing record)
+- `afterUpsert(record, data, isNew)` - always invokes
+
+```js
+class PersonCollection extends Collection {
+  mapUpsert = (data, isNew) => {
+    const {friends, ...body} = data;
+
+    if (isNew) {
+      return new Person(body);
+    } else {
+      return body;
+    }
+  };
+  afterUpsert = (person, data, isNew) => {
+    const {friends} = data;
+
+    person.setFriends(friends);
+  };
+}
+
+const people = new PersonCollection();
+
+class Person {
+  @observable friendsIds = [];
+
+  constructor(body) {
+    const {id, ...body} = params;
+
+    this.id = id;
+
+    extendObservable(this, body);
+  }
+
+  @action setFriends(friends) {
+    const newPeople = friends.map(f => {
+      return {
+        id: _.uniqueId(), // lodash function to generate unique ID
+        name: f,
+      };
+    })
+
+    people.upsert(newPeople);
+
+    this.friendsIds = newPeople.map(f => f.id);
+  }
+
+  @computed get friends() {
+    return people.filter(p => {
+      return this.friendsIds.includes(p.id);
+    });
   }
 }
+
+people.upsert({
+  id: 1,
+  name: 'Bob',
+  age: 20,
+  friends: ['Alice', 'Charlie'],
+});
+// => Person {
+//   id: 1,
+//   name: 'Bob',
+//   age: 20,
+//   friendsIds: [<uniqueId>, <uniqueId>]
+// }
+
+people.filter();
+// => [
+//   Person {id: 1, name: 'Bob', age: 20, friendsIds: [<uniqueId>, <uniqueId>]},
+//   Person {id: <uniqueId>, name: 'Alice', friendsIds: []},
+//   Person {id: <uniqueId>, name: 'Charlie', friendsIds: []},
+// ]
 ```
 
 ### methods
 
-#### #get(idArg)
+#### `get(idArg)`
 
 - `idArg` - *string*|*number* or array of *strings*|*numbers*
 
@@ -165,7 +248,7 @@ foos.get([1, 2]);
 // => [{id: 1, name: 'John'}, {id: 2, name: 'Bob'}]
 ```
 
-#### #filter(...params)
+#### `filter(...params)`
 
 Lodash `filter` function bound to collection's records.
 
@@ -180,7 +263,7 @@ foos.filter(f => f.name.length > 3);
 // => [{id: 1, name: 'John'}, {id: 3, name: 'Alice'}]
 ```
 
-#### #find(...params)
+#### `find(...params)`
 
 Lodash `find` function bound to collection's records.
 
@@ -195,13 +278,13 @@ foos.find({name: 'Alice'});
 // => {id: 3, name: 'Alice'}
 ```
 
-#### #inject(recordArg)
+#### `upsert(recordArg)`
 
 - `recordArg` - *object* or array of *objects*
 
 Upserts record(s) into collection. Utilizes [merge-items](https://github.com/lukaszgrolik/merge-items).
 
-- Returns object containing arrays of inserted and updated records' IDs.
+- Returns *record*|*undefined* if single object given or array of *records* if array of objects given.
 
 ```js
 const foos = new FooCollection([
@@ -209,22 +292,22 @@ const foos = new FooCollection([
   {id: 2, name: 'Bob'},
 ]);
 
-foos.inject({id: 2, name: 'Alice'});
-// => {inserted: [], updated: [2]}
-foos.inject([{id: 1, name: 'Andrew'}, {id: 3, name: 'Steve'}]);
-// => {inserted: [3], updated: [1]}
+foos.upsert({id: 2, name: 'Alice'});
+// => {id: 2, name: 'Alice'}
+foos.upsert([{id: 1, name: 'Andrew'}, {id: 3, name: 'Steve'}]);
+// => [{id: 1, name: 'Andrew'}, {id: 3, name: 'Steve'}]
 
 foos.filter();
 // => [{id: 1, name: 'Andrew'}, {id: 2, name: 'Alice'}, {id: 3, name: 'Steve'}]
 ```
 
-#### #eject(idArg)
+#### `remove(idArg)`
 
-- idArg - *string*|*number* or array of *strings*|*numbers*
+- `idArg` - *string*|*number* or array of *strings*|*numbers*
 
 Removes record(s) from collection by given ID(s). Returns removed record(s).
 
-- Returns *record*|*undefined* if primitive ID given or array of records if array of IDs given.
+- Returns *record*|*undefined* if primitive ID given or array of *records* if array of IDs given.
 
 ```js
 const foos = new FooCollection([
@@ -234,16 +317,16 @@ const foos = new FooCollection([
   {id: 4, name: 'Steve'},
 ]);
 
-foos.eject(1);
+foos.remove(1);
 // => {id: 1, name: 'John'}
-foos.eject([2, 3]);
+foos.remove([2, 3]);
 // => [{id: 2, name: 'Bob'}, {id: 3, name: 'Alice'}]
 
 foos.filter();
 // => [{id: 4, name: 'Steve'}]
 ```
 
-#### #clear()
+#### `clear()`
 
 Removes all records from collection.
 
@@ -263,7 +346,7 @@ foos.filter();
 // => []
 ```
 
-#### #replace(recordArg)
+#### `replace(recordArg)`
 
 - `recordArg` - *object* or array of *objects*
 
