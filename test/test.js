@@ -13,138 +13,96 @@ describe('constructor', () => {
   });
 
   it('adds records', () => {
-    new Collection([{id: 1}, {id: 2}, {id: 3}]).records
-    .should.containDeepOrdered([{id: 1}, {id: 2}, {id: 3}]);
+    new Collection([{id: 1}, {id: 2}, {id: 3}]).records.slice()
+    .should.eql([{id: 1}, {id: 2}, {id: 3}]);
   });
 });
 
-describe('transformRecords', () => {
-  it('maps records', () => {
-    class Foo {
-      constructor(body) {
-        this.id = body.id * 3;
-      }
-    }
+describe('"get" method', () => {
+  it('returns single record when single ID given', () => {
+    const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
 
-    class FooCollection extends Collection {
-      constructor(records) {
-        super();
+    coll.get(2).should.eql({id: 2});
+  });
 
-        this.transformRecords = foo => new Foo(foo);
-        this.inject(records);
-      }
-    }
+  it('returns array of records when array of IDs given', () => {
+    const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
 
-    const coll = new FooCollection([{id: 1}, {id: 2}, {id: 3}]);
+    coll.get([2, 1]).should.eql([
+      {id: 2},
+      {id: 1},
+    ]);
+  });
 
-    coll.records.slice().should.be.lengthOf(3);
-    coll.records.slice()[0].should.be.instanceOf(Foo);
-    coll.records.slice()[0].should.have.property('id', 3);
-    coll.records.slice()[1].should.be.instanceOf(Foo);
-    coll.records.slice()[1].should.have.property('id', 6);
-    coll.records.slice()[2].should.be.instanceOf(Foo);
-    coll.records.slice()[2].should.have.property('id', 9);
+  it('uses weak ID comparison', () => {
+    const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
+
+    coll.get('1').should.eql({id: 1});
+    coll.get(['2', '1']).should.eql([
+      {id: 2},
+      {id: 1},
+    ]);
+  });
+
+  it('returns items in the same sequence as given IDs', () => {
+    const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
+
+    coll.get([2, 1]).should.eql([
+      {id: 2},
+      {id: 1},
+    ]);
   });
 });
 
-describe('get', () => {
-  describe('with ID', () => {
-    it('returns single record', () => {
-      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-
-      coll.get(2).should.containDeepOrdered({id: 2});
-    });
-  });
-
-  describe('with array of IDs', () => {
-    it('returns many records', () => {
-      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-
-      coll.get([2, 1]).should.containDeepOrdered([{id: 1}, {id: 2}]);
-    });
-  });
-});
-
-describe('filter', () => {
+describe('"filter" method', () => {
   it('returns array of records', () => {
     const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
 
-    coll.filter(r => [2, 1].includes(r.id)).should.containDeepOrdered([{id: 1}, {id: 2}]);
+    coll.filter(r => [2, 1].includes(r.id)).should.eql([{id: 1}, {id: 2}]);
   });
 });
 
-describe('find', () => {
+describe('"find" method', () => {
   it('returns record', () => {
     it('returns array of records', () => {
       const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
 
-      coll.find({id: 2}).should.containDeepOrdered({id: 2});
+      coll.find({id: 2}).should.eql({id: 2});
     });
   });
 });
 
-// uses external library
-describe('inject', () => {
-  // it('injects single record', () => {
-  //   const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
+describe('"remove" method', () => {
+  it('removes single record when single ID given', () => {
+    const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
 
-  //   coll.inject({id: 4});
-  //   coll.inject({id: 2, name: 'foo'});
-  //   coll.records.should.containDeepOrdered([{id: 1}, {id: 2, name: 'foo'}, {id: 3}, {id: 4}]);
-  // });
+    coll.remove(2);
 
-  // it('injects many records', () => {
-  //   const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-
-  //   coll.inject([{id: 4}, {id: 2, name: 'foo'}]);
-  //   coll.records.should.containDeepOrdered([{id: 1}, {id: 2, name: 'foo'}, {id: 3}, {id: 4}]);
-  // });
-
-  // it('returns object with inserted and updated records IDs', () => {
-  //   const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-
-  //   coll.inject([{id: 4}, {id: 2, name: 'foo'}]).should.containDeepOrdered({
-  //     inserted: [4],
-  //     updated: [2],
-  //   });
-  // });
-});
-
-describe('eject', () => {
-  describe('with ID', () => {
-    it('removes single record', () => {
-      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-
-      coll.eject(2);
-
-      coll.records.should.containDeepOrdered([{id: 1}, {id: 3}]);
-    });
-
-    it('returns removed record', () => {
-      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
-
-      coll.eject(2).should.containDeepOrdered({id: 2});
-    });
+    coll.records.slice().should.eql([{id: 1}, {id: 3}]);
   });
 
-  describe('with array of IDs', () => {
-    it('removes many records', () => {
-      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
+  it('returns removed record when single ID given', () => {
+    const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
 
-      coll.eject([2, 3]);
+    coll.remove(2).should.eql({id: 2});
+  });
 
-      coll.records.should.containDeepOrdered([{id: 1}]);
-    });
+  it('removes many records when array of IDs given', () => {
+    const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
 
-    it('returns removed records', () => {
-      const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
+    coll.remove([2, 3]);
 
-      coll.eject([2, 3]).should.containDeepOrdered([{id: 2}, {id: 3}]);
-    });
+    coll.records.slice().should.eql([{id: 1}]);
+  });
+
+  it('returns array of removed records when array of IDs given', () => {
+    const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
+
+    coll.remove([2, 3]).should.eql([{id: 2}, {id: 3}]);
   });
 });
 
-describe('clear', () => {
+describe('"clear" method', () => {
   it('removes all records', () => {
     const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
 
@@ -159,13 +117,13 @@ describe('clear', () => {
   });
 });
 
-describe('replace', () => {
+describe('"replace" method', () => {
   it('removes all records and adds new records', () => {
     const coll = new Collection([{id: 1}, {id: 2}, {id: 3}]);
 
     coll.replace({id: 4})
 
-    coll.records.should.containDeepOrdered([{id: 4}]);
+    coll.records.slice().should.eql([{id: 4}]);
   });
 
   it('returns number of removed records', () => {
