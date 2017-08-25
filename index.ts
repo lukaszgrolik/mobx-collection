@@ -1,8 +1,8 @@
-import _find from 'lodash/find';
-import _filter from 'lodash/filter';
-import _reduce from 'lodash/reduce';
-import _remove from 'lodash/remove';
-import _includes from 'lodash/includes';
+import _find = require('lodash/find');
+import _filter = require('lodash/filter');
+import _reduce = require('lodash/reduce');
+import _remove = require('lodash/remove');
+import _includes = require('lodash/includes');
 import {observable, action} from 'mobx';
 import mergeItems from 'merge-items';
 
@@ -14,17 +14,25 @@ const _ = {
   includes: _includes,
 };
 
-export default class Collection {
-  @observable records = [];
+type TId = number | string;
+
+class MobxCollection<TBody = {}, TItem = TBody> {
+  @observable records: TItem[] = [];
   primaryKey = 'id';
 
-  constructor(recordArg) {
+  constructor(recordArg?: TBody | TBody[]) {
     if (recordArg) {
-      this.upsert(recordArg);
+      if (recordArg instanceof Array) {
+        this.upsert(recordArg);
+      } else {
+        this.upsert(recordArg);
+      }
     }
   }
 
-  get(idArg) {
+  get(idArg: TId[]): TItem[]
+  get(idArg: TId): TItem | undefined
+  get(idArg: TId[] | TId): TItem[] | TItem | undefined {
     if (idArg instanceof Array) {
       return _.reduce(idArg, (memo, id) => {
         const record = _.find(this.records, record => {
@@ -52,7 +60,9 @@ export default class Collection {
     return _.find(this.records, predicate);
   }
 
-  @action upsert(recordArg) {
+  upsert(recordArg: TBody[]): TItem[]
+  upsert(recordArg: TBody): TItem
+  @action upsert(recordArg: TBody[] | TBody): TItem[] | TItem {
     const callbacks = [
       'mapInsert',
       'mapUpdate',
@@ -75,7 +85,9 @@ export default class Collection {
     return mergeItems(this.records, recordArg, opts);
   }
 
-  @action remove(idArg) {
+  remove(idArg: TId[]): TItem[]
+  remove(idArg: TId): TItem | undefined
+  @action remove(idArg: TId[] | TId): TItem[] | TItem | undefined {
     const ids = idArg instanceof Array ? idArg : [idArg];
     const result = _.remove(this.records, record => {
       return _.includes(ids, record[this.primaryKey]);
@@ -88,7 +100,7 @@ export default class Collection {
     }
   }
 
-  @action clear() {
+  @action clear(): number {
     const n = this.records.length;
 
     this.records.length = 0;
@@ -96,11 +108,17 @@ export default class Collection {
     return n;
   }
 
-  @action replace(recordArg) {
+  @action replace(recordArg: TBody | TBody[]): number {
     const result = this.clear();
 
-    this.upsert(recordArg);
+    if (recordArg instanceof Array) {
+      this.upsert(recordArg);
+    } else {
+      this.upsert(recordArg);
+    }
 
     return result;
   }
-};
+}
+
+export default MobxCollection

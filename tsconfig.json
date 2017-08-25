@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "allowJs": true,
+    "allowUnreachableCode": false,
+    "forceConsistentCasingInFileNames": true,
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "noImplicitUseStrict": false,
+    "strictNullChecks": true,
+    "target": "es5",
+    "jsx": "react",
+    // "allowSyntheticDefaultImports": true,
+    // "rootDir": "src",
+    // "outDir": "lib",
+    "experimentalDecorators": true,
+    "typeRoots": [
+      "./typings",
+      "node_modules/@types",
+      "./@types"
+    ],
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "lib": ["es2015", "dom"]
+  }
+}
